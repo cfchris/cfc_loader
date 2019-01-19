@@ -28,7 +28,7 @@ properties.
 	}
 
 (It's unfortunate that ColdFusion has no way to document the types
-of items in an array. But, it doesn't. ¯\_(ツ)_/¯.)
+of items in an array. But, it doesn't. ¯\\\_(ツ)\_/¯.)
 
 Create an instance of the loader and set the LoadersPath.
 
