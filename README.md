@@ -13,9 +13,22 @@ manage.
 With this package (and removing the inheritance of the old package), I was able
 to reduce the time to load certain schema items by as much as __95%__.
 
-The component that took 1,300 ms to load before can be loaded in about 70ms.
+The component that took 1,300 ms to load before can be loaded in about 70 ms.
 
 ## How do I use it?
+
+If you want to have a property on a component that should be populated with
+arrays of components, you will need to use `item_type="path.to.cfc"` on your
+properties.
+
+	// example component with a property that is an array of components
+	component accessors=true {
+		property name="id" type="numeric"; // basic
+		property name="options" type="array" item_type="com.foo.Option"; // item_type meta data
+	}
+
+(It's unfortunate that ColdFusion has no way to document the types
+of items in an array. But, it doesn't. ¯\_(ツ)_/¯.)
 
 Create an instance of the loader and set the LoadersPath.
 
@@ -39,6 +52,8 @@ Loaders are generated for each component with a name containing a "signature" ha
 If you add any properties to a component (_or_ any it extends _or_ even update this package),
 it will automatically regenerate loader components as necessary.
 
+
+
 ## Why?
 
 If you `SerializeJson()` structs and arrays in ColdFusion/CFML, you will get
@@ -46,7 +61,7 @@ inconsistent and undesirable results. (Type conversions, strings that can
 convert to numbers missing quotes, etc)
 
 If you use components with properties with correct types, you will get more
-consistent `SerializeJson()` results. (And as a bonus, you have documented you API.)
+consistent `SerializeJson()` results. (And as a bonus, you have documented your API.)
 
 Where I work we have been using components for a while that are nested types
 with component properties, etc. We were loading them with a system where all
@@ -57,7 +72,7 @@ got very, very _slow_.
 
 I looked into the slowness and here are _a few_ of the issues that I found (and some solutions)
 
-1. creating components from scratch in CF is slow (on the scale of thousands)
+1. creating components (we're talking thousands) from scratch in CF is slow
    1. make one component and `Duplicate()` it as needed
    2. cache the templates if possible
 2. using `GetMetaData()` repeatedly is expensive
