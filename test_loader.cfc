@@ -249,7 +249,8 @@ component extends="mxunit.framework.TestCase" {
 							"cfc": SerializeJson(new test_cfcs.Option().setId(1)),
 							"data": {name: "Option 1"}
 						}
-					}
+					},
+					"returnType": "test_cfcs.Option"
 				}
 			},
 			"test Widget (2)": {
@@ -266,7 +267,8 @@ component extends="mxunit.framework.TestCase" {
 							"cfc": SerializeJson(new test_cfcs.Widget().setId(2)),
 							"data": {name: "Widget 2"}
 						}
-					}
+					},
+					"returnType": "test_cfcs.Widget"
 				}
 			}
 		];
@@ -296,6 +298,7 @@ component extends="mxunit.framework.TestCase" {
 			// check assertions
 			calls["getCfcLoader"] = variables.loader["getCfcLoader_Args"];
 			AssertEquals(test.expect.calls, calls, "#name# - calls don't match expected");
+			AssertEquals(test.expect.returnType, GetMetaData(result).name, "#name# - return type doesn't match expected");
 		}
 	}
 

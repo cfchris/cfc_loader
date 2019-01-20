@@ -71,7 +71,7 @@ component accessors=true {
 	/**
 	* @hint loads a provided component with provided data
 	**/
-	public void function load(
+	public component function load(
 		required component cfc,
 		required struct data = {}
 	) {
@@ -79,6 +79,7 @@ component accessors=true {
 			cfc = arguments.cfc,
 			data = arguments.data
 		);
+		return arguments.cfc;
 	}
 
 	/**
