@@ -7,6 +7,9 @@ component {
 		var properties = getProperties(cfc = arguments.cfc);
 		var code =  'component {
 
+			// name of component this loader loads
+			variables.componentToLoad = "#GetMetaData(arguments.cfc).name#";
+
 			// Cached loaders (populated in constructor)
 			variables.loaders = {};
 
@@ -16,8 +19,13 @@ component {
 
 			public component function init(required loader loader) {
 				variables.loader = arguments.loader;
+				// micro-optimization: pre-cache a loader for each template VO
 				for ( var key in variables.vos ) {
-					variables.loaders[key] = variables.loader.getCfcLoader(variables.vos[key]);
+					if ( key == variables.componentToLoad ) {
+						variables.loaders[key] = this;
+					} else {
+						variables.loaders[key] = variables.loader.getCfcLoader(variables.vos[key]);
+					}
 				}
 				return this;
 			}
