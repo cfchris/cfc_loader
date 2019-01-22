@@ -231,6 +231,74 @@ component extends="mxunit.framework.TestCase" {
 	}
 
 	/**
+	* @hint "I test load (with generation)."
+	**/
+	public void function test_load_integration() {
+		var tests = [
+			"test Widget (data is just structs/arrays)": {
+				"args": {
+					"cfc": new test_cfcs.Widget(),
+					"data": {
+						"id": 1,
+						"name": "structs/arrays",
+						"options": [
+							{"id": 1, "name": "Option 1"},
+							{"id": 2, "name": "Option 2"}
+						]
+					}
+				},
+				"expect": {
+					"returnType": "test_cfcs.Widget",
+					"serialized": {
+						"id": 1,
+						"name": "structs/arrays",
+						"options": [
+							{"id": 1, "name": "Option 1"},
+							{"id": 2, "name": "Option 2"}
+						]
+					}
+				}
+			},
+			"test Widget (data has items of item_type)": {
+				"args": {
+					"cfc": new test_cfcs.Widget(),
+					"data": {
+						"id": 2,
+						"name": "items of item_type",
+						"options": [
+							new test_cfcs.Option().setId(3).setName("Option 3"),
+							new test_cfcs.Option().setId(4).setName("Option 4")
+						]
+					}
+				},
+				"expect": {
+					"returnType": "test_cfcs.Widget",
+					"serialized": {
+						"id": 2,
+						"name": "items of item_type",
+						"options": [
+							{"id": 3, "name": "Option 3"},
+							{"id": 4, "name": "Option 4"}
+						]
+					}
+				}
+			}
+		];
+		for ( var name in tests ) {
+			var test = tests[name];
+			// call method under test
+			var result = variables.loader.load(cfc = test.args.cfc, data = test.args.data);
+			// check assertions
+			AssertEquals(test.expect.returnType, GetMetaData(result).name, "#name# - return type doesn't match expected");
+			AssertEquals(
+				test.expect.serialized,
+				DeserializeJson(SerializeJson(result)),
+				"#name# - result did not contain expected data"
+			);
+		}
+	}
+
+	/**
 	* @hint "I test load."
 	**/
 	public void function test_load() {
