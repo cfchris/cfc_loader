@@ -109,7 +109,7 @@ component {
 				if ( StructKeyExists(arguments.data, "#arguments.property.name#") && !IsNull(arguments.data["#arguments.property.name#"]) && IsArray(arguments.data["#arguments.property.name#"]) ) {
 					var clean = [];
 					for ( var item in arguments.data["#arguments.property.name#"] ) {
-						if ( IsStruct(item) ) {
+						if ( IsStruct(item) && !IsObject(item) ) {
 							var vo = Duplicate(variables.vos["#arguments.property.item_type#"]);
 							variables.loaders["#arguments.property.item_type#"].load(cfc = vo, data = item);
 							ArrayAppend(clean, vo);
@@ -124,7 +124,7 @@ component {
 		if ( arguments.property.type == "component" ) {
 			return '
 				if ( StructKeyExists(arguments.data, "#arguments.property.name#") && !IsNull(arguments.data["#arguments.property.name#"]) ) {
-					if ( IsStruct(arguments.data["#arguments.property.name#"]) ) {
+					if ( IsStruct(arguments.data["#arguments.property.name#"]) && !IsObject(arguments.data["#arguments.property.name#"]) ) {
 						var vo = Duplicate(variables.vos["#arguments.property.item_type#"]);
 						variables.loaders["#arguments.property.item_type#"].load(cfc = vo, data = arguments.data["#arguments.property.name#"]);
 						arguments.cfc.set#arguments.property.name#(vo);
