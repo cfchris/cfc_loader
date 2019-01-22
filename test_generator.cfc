@@ -371,7 +371,7 @@ component extends="mxunit.framework.TestCase" {
 				},
 				"expect": '
 					if ( StructKeyExists(arguments.data, "optionProp") && !IsNull(arguments.data["optionProp"]) ) {
-						if ( IsStruct(arguments.data["optionProp"]) ) {
+						if ( IsStruct(arguments.data["optionProp"]) && !IsObject(arguments.data["optionProp"]) ) {
 							var vo = Duplicate(variables.vos["test_cfcs.Option"]);
 							variables.loaders["test_cfcs.Option"].load(cfc = vo, data = arguments.data["optionProp"]);
 							arguments.cfc.setoptionProp(vo);
@@ -391,7 +391,7 @@ component extends="mxunit.framework.TestCase" {
 					if ( StructKeyExists(arguments.data, "optionsProp") && !IsNull(arguments.data["optionsProp"]) && IsArray(arguments.data["optionsProp"]) ) {
 						var clean = [];
 						for ( var item in arguments.data["optionsProp"] ) {
-							if ( IsStruct(item) ) {
+							if ( IsStruct(item) && !IsObject(item) ) {
 								var vo = Duplicate(variables.vos["test_cfcs.Option"]);
 								variables.loaders["test_cfcs.Option"].load(cfc = vo, data = item);
 								ArrayAppend(clean, vo);

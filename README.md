@@ -43,9 +43,13 @@ Create an instance of the loader and set the LoadersPath.
 
 Get a handle on the loader and use it to load a CFC with data.
 
+	// long form
 	var response = new com.foo.bar();
 	loader.load(response, data);
 	return response;
+
+	// short form
+	return loader.load(new com.foo.bar(), data);
 
 That's really it. The loader will handle generating and caching loaders.
 Loaders are generated for each component with a name containing a "signature" hash.
