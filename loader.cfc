@@ -35,7 +35,12 @@ component accessors=true {
 					code = fixNewLine(getGenerator().generate(cfc = arguments.cfc))
 				);
 			}
-			variables.loaderCache[cfcName] = CreateObject("component", loaderName).init(loader = this);
+			// some CFCs have references to types that contain references back to the CFC
+			// so, load the loader into the cache immediately (without calling constructor)
+			variables.loaderCache[cfcName] = CreateObject("component", loaderName);
+			// now that it's in the cache and we can prevent racing circular dependencies,
+			// call the constructor to finish loading
+			variables.loaderCache[cfcName].init(loader = this);
 		}
 		return variables.loaderCache[cfcName];
 	}
