@@ -291,9 +291,9 @@ component extends="mxunit.framework.TestCase" {
 		);
 		// "baseline" stats from 2019-01-23
 		var baseline = [
-			"elapsed ms": 150,
+			"elapsed ms": 200,
 			"loop count": 1000,
-			"avg load() ms": 0.15
+			"avg load() ms": 0.20
 		];
 		// stats for the current run
 		var stats = [
