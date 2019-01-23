@@ -231,6 +231,89 @@ component extends="mxunit.framework.TestCase" {
 	}
 
 	/**
+	* @hint "I test load (for speed)."
+	**/
+	public void function test_load_benchmark() {
+		// NOTE
+		// This test could fail (be too slow) on different hardware/OS/etc combinations.
+		// I'm aware of this.
+		// I'll adjust this as necessary.
+		var data = {
+			"id": 1,
+			"name": "Benchmark Bundle",
+			"widgets": [
+				{
+					"id": 1,
+					"name": "Benchmark Widget 1",
+					"options": [
+						{"id": 1, "name": "Benchmark Option 1"},
+						{"id": 2, "name": "Benchmark Option 2"}
+					],
+					"isInBundles": [
+						{"id": 1, "Name": "Benchmark Bundle"},
+						{"id": 7, "Name": "Some Other Bundle"}
+					]
+				},
+				{
+					"id": 2,
+					"name": "Benchmark Widget 2",
+					"options": [
+						{"id": 3, "name": "Benchmark Option 3"},
+						{"id": 4, "name": "Benchmark Option 4"}
+					],
+					"isInBundles": [
+						{"id": 1,  "Name": "Benchmark Bundle"},
+						{"id": 42, "Name": "Yet Another Bundle"}
+					]
+				}
+			]
+		};
+		var loopCount = 1000;
+		// note the time
+		var startTime = GetTickCount();
+		// make sure loader is working (also warms loader by generating and caching required sub-loaders)
+		AssertEquals(
+			DeserializeJson(SerializeJson(data)),
+			DeserializeJson(SerializeJson(variables.loader.load(new test_cfcs.Bundle(), data))),
+			"start - loader failure (bundle doesn't match source data)"
+		);
+		// load a bunch of bundles nested 3 levels deep (i.e. bundle > widget[] > bundle[])
+		for ( var i = 0; i < loopCount; i++ ) {
+			var bundle = variables.loader.load(new test_cfcs.Bundle(), data);
+		}
+		// figure out how long it took
+		var elapsedTime = GetTickCount() - startTime;
+		// make sure the CFCs were being completely loaded (sanity check)
+		AssertEquals(
+			DeserializeJson(SerializeJson(data)),
+			DeserializeJson(SerializeJson(bundle)),
+			"finished - loader failure (bundle doesn't match source data)"
+		);
+		// "baseline" stats from 2019-01-23
+		var baseline = [
+			"elapsed ms": 200,
+			"loop count": 1000,
+			"avg load() ms": 0.20
+		];
+		// stats for the current run
+		var stats = [
+			"elapsed ms": elapsedTime,
+			"loop count": loopCount,
+			"avg load() ms": elapsedTime / loopCount
+		];
+		// display stats when run in debug
+		debug([
+			"baseline": baseline,
+			"current": stats
+		]);
+		// have we drastically exceeded previous benchmarks? (see var baseline above)
+		AssertTrue(
+			stats["elapsed ms"] < (3 * baseline["elapsed ms"]),
+			"load time has more than tripled since benchmark was established"
+		);
+	}
+
+	/**
 	* @hint "I test load (with generation)."
 	**/
 	public void function test_load_integration() {

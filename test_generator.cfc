@@ -55,24 +55,23 @@ component extends="mxunit.framework.TestCase" {
 							// name of component this loader loads
 							variables.componentToLoad = "test_cfcs.Option";
 
-							// Cached loaders (populated in constructor)
+							// cache of loaders (lazy loaded by getCfcLoader)
 							variables.loaders = {};
 
-							// Template VOs
+							// cache of template VOs (for duplicateing)
 							variables.vos = {};
 							// VO cache code 1
 
 							public component function init(required loader loader) {
-								variables.loader = arguments.loader;
-								// micro-optimization: pre-cache a loader for each template VO
-								for ( var key in variables.vos ) {
-									if ( key == variables.componentToLoad ) {
-										variables.loaders[key] = this;
-									} else {
-										variables.loaders[key] = variables.loader.getCfcLoader(variables.vos[key]);
-									}
-								}
+								variables.parentLoader = arguments.loader;
 								return this;
+							}
+
+							private component function getCfcLoader(required string cfcName) {
+								if ( !StructKeyExists(variables.loaders, arguments.cfcName) ) {
+									variables.loaders[arguments.cfcName] = variables.parentLoader.getCfcLoader(variables.vos[arguments.cfcName]);
+								}
+								return variables.loaders[arguments.cfcName];
 							}
 
 							// load method 1
@@ -120,24 +119,23 @@ component extends="mxunit.framework.TestCase" {
 							// name of component this loader loads
 							variables.componentToLoad = "test_cfcs.Option";
 
-							// Cached loaders (populated in constructor)
+							// cache of loaders (lazy loaded by getCfcLoader)
 							variables.loaders = {};
 
-							// Template VOs
+							// cache of template VOs (for duplicateing)
 							variables.vos = {};
 							// VO cache code 2
 
 							public component function init(required loader loader) {
-								variables.loader = arguments.loader;
-								// micro-optimization: pre-cache a loader for each template VO
-								for ( var key in variables.vos ) {
-									if ( key == variables.componentToLoad ) {
-										variables.loaders[key] = this;
-									} else {
-										variables.loaders[key] = variables.loader.getCfcLoader(variables.vos[key]);
-									}
-								}
+								variables.parentLoader = arguments.loader;
 								return this;
+							}
+
+							private component function getCfcLoader(required string cfcName) {
+								if ( !StructKeyExists(variables.loaders, arguments.cfcName) ) {
+									variables.loaders[arguments.cfcName] = variables.parentLoader.getCfcLoader(variables.vos[arguments.cfcName]);
+								}
+								return variables.loaders[arguments.cfcName];
 							}
 
 							// load method 2
@@ -373,7 +371,7 @@ component extends="mxunit.framework.TestCase" {
 					if ( StructKeyExists(arguments.data, "optionProp") && !IsNull(arguments.data["optionProp"]) ) {
 						if ( IsStruct(arguments.data["optionProp"]) && !IsObject(arguments.data["optionProp"]) ) {
 							var vo = Duplicate(variables.vos["test_cfcs.Option"]);
-							variables.loaders["test_cfcs.Option"].load(cfc = vo, data = arguments.data["optionProp"]);
+							getCfcLoader("test_cfcs.Option").load(cfc = vo, data = arguments.data["optionProp"]);
 							arguments.cfc.setoptionProp(vo);
 						} else {
 							arguments.cfc.setoptionProp(arguments.data["optionProp"]);
@@ -390,10 +388,11 @@ component extends="mxunit.framework.TestCase" {
 				"expect": '
 					if ( StructKeyExists(arguments.data, "optionsProp") && !IsNull(arguments.data["optionsProp"]) && IsArray(arguments.data["optionsProp"]) ) {
 						var clean = [];
+						var loader = getCfcLoader("test_cfcs.Option");
 						for ( var item in arguments.data["optionsProp"] ) {
 							if ( IsStruct(item) && !IsObject(item) ) {
 								var vo = Duplicate(variables.vos["test_cfcs.Option"]);
-								variables.loaders["test_cfcs.Option"].load(cfc = vo, data = item);
+								loader.load(cfc = vo, data = item);
 								ArrayAppend(clean, vo);
 							} else {
 								ArrayAppend(clean, item);
