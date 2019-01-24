@@ -323,6 +323,7 @@ component extends="mxunit.framework.TestCase" {
 					"cfc": new test_cfcs.Widget(),
 					"data": {
 						"id": 1,
+						"isOnSpecial": "",
 						"name": "structs/arrays",
 						"options": [
 							{"id": 1, "name": "Option 1"},
