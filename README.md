@@ -1,25 +1,9 @@
 # cfc_loader
 
-## TL;DR
+## Usage
 
-Where I work we had a way of loading nested sets of components from a struct
-(often containing nested data). But, for large, deeply nested payloads it was
-very, _very_ slow. (In one case, it took 1,300 ms to load deeply nested data.)
-
-I wrote this package to recursively populate the properties of components
-with data (usually deserialized JSON) in the fastest possible way I could 
-manage.
-
-With this package (and removing the inheritance of the old package), I was able
-to reduce the time to load certain schema items by as much as __95%__.
-
-The component that took 1,300 ms to load before can be loaded in about 70 ms.
-
-## How do I use it?
-
-If you want to have a property on a component that should be populated with
-arrays of components, you will need to use `item_type="path.to.cfc"` on your
-properties.
+If you want to have a property on a component populated with arrays of components,
+you will need to use `item_type="path.to.cfc"` on your properties.
 
 	// example component with a property that is an array of components
 	component accessors=true {
@@ -30,33 +14,30 @@ properties.
 (It's unfortunate that ColdFusion has no way to document the types
 of items in an array. But, it doesn't. ¯\\\_(ツ)\_/¯.)
 
-Create an instance of the loader and set the LoadersPath.
+### Example Code
 
-	// Plain old CFML
+	// You should cache your loader.
+	// But, for this example, it is uncached.
 	var loader = new com.github.cfchris.cfc_loader.loader();
-	loader.setLoadersPath("com.generated.loaders"); // directory should exist (probably with .gitignore on *.cfc)
+	loader.setLoadersPath("com.generated.loaders");
 
-	// ColdSpring
-	<bean id="VoLoader" class="com.github.cfchris.cfc_loader.loader">
-		<property name="LoadersPath"><value>com.generated.loaders</value></property>
-	</bean>
+	// Often data come as JSON from APIs
+	var apiData = '{
+		"id": 1,
+		"name": "Benchmark Bundle",
+		"widgets": [
+			{"id": 1, "name": "Benchmark Widget 1"},
+			{"id": 2, "name": "Benchmark Widget 2"}
+		]
+	}';
 
-Get a handle on the loader and use it to load a CFC with data.
-
-	// long form
-	var response = new com.foo.bar();
-	loader.load(response, data);
-	return response;
-
-	// short form
-	return loader.load(new com.foo.bar(), data);
+	// Return a data component (populated from an API response)
+	return loader.load(new test_cfcs.Bundle(), DeserializeJson(apiData));
 
 That's really it. The loader will handle generating and caching loaders.
 Loaders are generated for each component with a name containing a "signature" hash.
 If you add any properties to a component (_or_ any it extends _or_ even update this package),
 it will automatically regenerate loader components as necessary.
-
-
 
 ## Why?
 
@@ -74,35 +55,7 @@ dynamically and recursively loads the component and all of its children. But,
 when we started using them for APIs that respond with deeply nested types, it
 got very, very _slow_.
 
-I looked into the slowness and here are _a few_ of the issues that I found (and some solutions)
-
-1. creating components (we're talking thousands) from scratch in CF is slow
-   1. make one component and `Duplicate()` it as needed
-   2. cache the templates if possible
-2. using `GetMetaData()` repeatedly is expensive
-   1. use it sparingly and cache the result
-3. dynamically looping over the incoming data (and dynamically finding/using setters) is expensive
-   1. generate code that doesn't do this (it has conditionals that call setters directly)
-4. basic functions calls (even simple getters) have some overhead
-   1. generate code that caches things in structs and uses them directly
-
-Based on that (and more experimenting), I wrote this library (cfc_loader).
-
-It contains a generator that generates strings of code. The generator
-accepts a component, determines all it's properties (including inheritance),
-and generates a component that can load the components properties.
-
-It also contains the loader that you will use in your code. The loader
-is configured with a LoadersPath (e.g. com.generated.loaders). When asked
-to load a component, it will determine if it already has a loader for that
-component. If necessary, it will use the generator to generate a loader
-for the component provided. Regardless, it will cache the generator for
-subsequent use. Given there is a generated and cached loader, it will use
-the loader specific to the provided component to load it with data. The
-loader specific to the component provided, may have references to other
-loaders to load properties with components or arrays of components. This
-system ends up eventually recursively loading the components properties
-with the values in the corresponding keys in the data provided.
+So, I wrote cfc_loader.
 
 ## License
 
