@@ -349,36 +349,6 @@ component extends="mxunit.framework.TestCase" {
 					}
 				'
 			},
-			"'boolean' setter": {
-				"property": {
-					"name": "booleanProp",
-					"type": "boolean",
-					"item_type": ""
-				},
-				"expect": '
-					if ( StructKeyExists(arguments.data, "booleanProp") && !IsNull(arguments.data["booleanProp"]) ) {
-						arguments.cfc.setbooleanProp(arguments.data["booleanProp"]);
-					}
-				'
-			},
-			"'component' (of item_type) setter": {
-				"property": {
-					"name": "optionProp",
-					"type": "component",
-					"item_type": "test_cfcs.Option"
-				},
-				"expect": '
-					if ( StructKeyExists(arguments.data, "optionProp") && !IsNull(arguments.data["optionProp"]) ) {
-						if ( IsStruct(arguments.data["optionProp"]) && !IsObject(arguments.data["optionProp"]) ) {
-							var vo = Duplicate(variables.vos["test_cfcs.Option"]);
-							getCfcLoader("test_cfcs.Option").load(cfc = vo, data = arguments.data["optionProp"]);
-							arguments.cfc.setoptionProp(vo);
-						} else {
-							arguments.cfc.setoptionProp(arguments.data["optionProp"]);
-						}
-					}
-				'
-			},
 			"'array' (of item_type) setter": {
 				"property": {
 					"name": "optionsProp",
@@ -402,6 +372,72 @@ component extends="mxunit.framework.TestCase" {
 					}
 				'
 			},
+			"'boolean' setter": {
+				"property": {
+					"name": "booleanProp",
+					"type": "boolean",
+					"item_type": ""
+				},
+				"expect": '
+					if ( StructKeyExists(arguments.data, "booleanProp") && !IsNull(arguments.data["booleanProp"]) && IsValid("boolean", arguments.data["booleanProp"]) ) {
+						arguments.cfc.setbooleanProp(arguments.data["booleanProp"]);
+					}
+				'
+			},
+			"'component' (of item_type) setter": {
+				"property": {
+					"name": "optionProp",
+					"type": "component",
+					"item_type": "test_cfcs.Option"
+				},
+				"expect": '
+					if ( StructKeyExists(arguments.data, "optionProp") && !IsNull(arguments.data["optionProp"]) ) {
+						if ( IsStruct(arguments.data["optionProp"]) && !IsObject(arguments.data["optionProp"]) ) {
+							var vo = Duplicate(variables.vos["test_cfcs.Option"]);
+							getCfcLoader("test_cfcs.Option").load(cfc = vo, data = arguments.data["optionProp"]);
+							arguments.cfc.setoptionProp(vo);
+						} else {
+							arguments.cfc.setoptionProp(arguments.data["optionProp"]);
+						}
+					}
+				'
+			},
+			"'date' setter": {
+				"property": {
+					"name": "dateProp",
+					"type": "date",
+					"item_type": ""
+				},
+				"expect": '
+					if ( StructKeyExists(arguments.data, "dateProp") && !IsNull(arguments.data["dateProp"]) && IsValid("date", arguments.data["dateProp"]) ) {
+						arguments.cfc.setdateProp(arguments.data["dateProp"]);
+					}
+				'
+			},
+			"'guid' setter": {
+				"property": {
+					"name": "guidProp",
+					"type": "guid",
+					"item_type": ""
+				},
+				"expect": '
+					if ( StructKeyExists(arguments.data, "guidProp") && !IsNull(arguments.data["guidProp"]) && IsValid("guid", arguments.data["guidProp"]) ) {
+						arguments.cfc.setguidProp(arguments.data["guidProp"]);
+					}
+				'
+			},
+			"'numeric' setter": {
+				"property": {
+					"name": "numericProp",
+					"type": "numeric",
+					"item_type": ""
+				},
+				"expect": '
+					if ( StructKeyExists(arguments.data, "numericProp") && !IsNull(arguments.data["numericProp"]) && IsValid("numeric", arguments.data["numericProp"]) ) {
+						arguments.cfc.setnumericProp(arguments.data["numericProp"]);
+					}
+				'
+			},
 			"string setter": {
 				"property": {
 					"name": "stringProp",
@@ -411,6 +447,18 @@ component extends="mxunit.framework.TestCase" {
 				"expect": '
 					if ( StructKeyExists(arguments.data, "stringProp") && !IsNull(arguments.data["stringProp"]) ) {
 						arguments.cfc.setstringProp(arguments.data["stringProp"]);
+					}
+				'
+			},
+			"'uuid' setter": {
+				"property": {
+					"name": "uuidProp",
+					"type": "uuid",
+					"item_type": ""
+				},
+				"expect": '
+					if ( StructKeyExists(arguments.data, "uuidProp") && !IsNull(arguments.data["uuidProp"]) && IsValid("uuid", arguments.data["uuidProp"]) ) {
+						arguments.cfc.setuuidProp(arguments.data["uuidProp"]);
 					}
 				'
 			}
