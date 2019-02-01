@@ -377,11 +377,11 @@ component extends="mxunit.framework.TestCase" {
 				// call method under test
 				var result = variables.loader.load(cfc = test.args.cfc, data = test.args.data);
 				// check assertions
-				AssertEquals(test.expect.returnType, GetMetaData(result).name, "#name# - return type doesn't match expected");
+				AssertEquals(test.expect.returnType, GetMetaData(result).name, "(data:#dataType#) #name# - return type doesn't match expected");
 				AssertEquals(
 					test.expect.serialized,
 					DeserializeJson(SerializeJson(result)),
-					"#name# - result did not contain expected data"
+					"(data:#dataType#) #name# - result did not contain expected data"
 				);
 			}
 		}
