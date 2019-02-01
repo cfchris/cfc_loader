@@ -289,11 +289,11 @@ component extends="mxunit.framework.TestCase" {
 			DeserializeJson(SerializeJson(bundle)),
 			"finished - loader failure (bundle doesn't match source data)"
 		);
-		// "baseline" stats from 2019-01-23
+		// "baseline" stats from 2019-02-01
 		var baseline = [
-			"elapsed ms": 200,
+			"elapsed ms": 210,
 			"loop count": 1000,
-			"avg load() ms": 0.20
+			"avg load() ms": 0.21
 		];
 		// stats for the current run
 		var stats = [
@@ -368,17 +368,22 @@ component extends="mxunit.framework.TestCase" {
 				}
 			}
 		];
-		for ( var name in tests ) {
-			var test = tests[name];
-			// call method under test
-			var result = variables.loader.load(cfc = test.args.cfc, data = test.args.data);
-			// check assertions
-			AssertEquals(test.expect.returnType, GetMetaData(result).name, "#name# - return type doesn't match expected");
-			AssertEquals(
-				test.expect.serialized,
-				DeserializeJson(SerializeJson(result)),
-				"#name# - result did not contain expected data"
-			);
+		for ( var dataType in ["json", "struct"] ) {
+			for ( var name in tests ) {
+				var test = tests[name];
+				if ( dataType == "json" ) {
+					test.args.data = SerializeJson(test.args.data);
+				}
+				// call method under test
+				var result = variables.loader.load(cfc = test.args.cfc, data = test.args.data);
+				// check assertions
+				AssertEquals(test.expect.returnType, GetMetaData(result).name, "#name# - return type doesn't match expected");
+				AssertEquals(
+					test.expect.serialized,
+					DeserializeJson(SerializeJson(result)),
+					"#name# - result did not contain expected data"
+				);
+			}
 		}
 	}
 
