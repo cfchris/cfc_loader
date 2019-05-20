@@ -31,7 +31,10 @@ of items in an array. But, it doesn't. ¯\\\_(ツ)\_/¯.)
 		]
 	}';
 
-	// Return a data component (populated from an API response)
+	// (option 1) Return a data component (populated from a raw API response)
+	return loader.load(new test_cfcs.Bundle(), apiData);
+
+	// (option 2) Return a data component (populated from a deserialized API response)
 	return loader.load(new test_cfcs.Bundle(), DeserializeJson(apiData));
 
 That's really it. The loader will handle generating and caching loaders.
