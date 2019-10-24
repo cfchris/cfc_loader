@@ -380,7 +380,7 @@ component extends="mxunit.framework.TestCase" {
 				},
 				"expect": '
 					if ( StructKeyExists(arguments.data, "booleanProp") && !IsNull(arguments.data["booleanProp"]) && IsValid("boolean", arguments.data["booleanProp"]) ) {
-						arguments.cfc.setbooleanProp(arguments.data["booleanProp"]);
+						arguments.cfc.setbooleanProp(arguments.data["booleanProp"] ? true : false);
 					}
 				'
 			},
