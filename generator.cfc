@@ -134,7 +134,15 @@ component {
 				}
 			';
 		}
-		if ( ListFindNoCase("boolean,date,guid,numeric,uuid", arguments.property.type) > 0 ) {
+		if ( arguments.property.type == "boolean" ) {
+			// convert truthy values to true/false
+			return '
+				if ( StructKeyExists(arguments.data, "#arguments.property.name#") && !IsNull(arguments.data["#arguments.property.name#"]) && IsValid("#arguments.property.type#", arguments.data["#arguments.property.name#"]) ) {
+					arguments.cfc.set#arguments.property.name#(arguments.data["#arguments.property.name#"] ? true : false);
+				}
+			';
+		}
+		if ( ListFindNoCase("date,guid,numeric,uuid", arguments.property.type) > 0 ) {
 			return '
 				if ( StructKeyExists(arguments.data, "#arguments.property.name#") && !IsNull(arguments.data["#arguments.property.name#"]) && IsValid("#arguments.property.type#", arguments.data["#arguments.property.name#"]) ) {
 					arguments.cfc.set#arguments.property.name#(arguments.data["#arguments.property.name#"]);
