@@ -56,7 +56,10 @@ component extends="mxunit.framework.TestCase" {
 					"calls": {
 						"getCfcName": [], // arg cfcName skips getCfcName(), thus skipping GetMetaData(cfc).name
 						"getCfcLoaderName": [
-							{"cfc": SerializeJson(new test_cfcs.Bundle().setId(1))}
+							{
+								"cfc": SerializeJson(new test_cfcs.Bundle().setId(1)),
+								"cfcName": "test_cfcs.Bundle"
+							}
 						],
 						"loaderExists": [
 							{"cfcName": "test_loaders.test_cfcs_Bundle"}
@@ -84,7 +87,10 @@ component extends="mxunit.framework.TestCase" {
 							{"cfc": SerializeJson(new test_cfcs.Bundle().setId(1))}
 						],
 						"getCfcLoaderName": [
-							{"cfc": SerializeJson(new test_cfcs.Bundle().setId(1))}
+							{
+								"cfc": SerializeJson(new test_cfcs.Bundle().setId(1)),
+								"cfcName": "test_cfcs.Bundle"
+							}
 						],
 						"loaderExists": [
 							{"cfcName": "test_loaders.test_cfcs_Bundle"}
@@ -112,7 +118,10 @@ component extends="mxunit.framework.TestCase" {
 							{"cfc": SerializeJson(new test_cfcs.Option().setId(2))}
 						],
 						"getCfcLoaderName": [
-							{"cfc": SerializeJson(new test_cfcs.Option().setId(2))}
+							{
+								"cfc": SerializeJson(new test_cfcs.Option().setId(2)),
+								"cfcName": "test_cfcs.Option"
+							}
 						],
 						"loaderExists": [
 							{"cfcName": "test_loaders.test_cfcs_Option"}
@@ -594,8 +603,13 @@ component extends="mxunit.framework.TestCase" {
 		return this["getCfcLoader_Mock"];
 	}
 
-	private string function getCfcLoaderNameMock(required component cfc) {
-		ArrayAppend(this["getCfcLoaderName_Args"], {"cfc": SerializeJson(arguments.cfc)});
+	private string function getCfcLoaderNameMock(required component cfc, string cfcName) {
+		var args = {};
+		if ( StructKeyExists(arguments, "cfcName") && Len(arguments.cfcName) > 0 ) {
+			args["cfcName"] = arguments.cfcName;
+		}
+		args.cfc = SerializeJson(arguments.cfc);
+		ArrayAppend(this["getCfcLoaderName_Args"], args);
 		return this["getCfcLoaderName_Mock"];
 	}
 

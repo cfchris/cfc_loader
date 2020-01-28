@@ -37,7 +37,7 @@ component accessors=true {
 			arguments.cfcName = getCfcName(cfc = arguments.cfc);
 		}
 		if ( !StructKeyExists(variables.loaderCache, arguments.cfcName) ) {
-			var loaderName = getCfcLoaderName(cfc = arguments.cfc);
+			var loaderName = getCfcLoaderName(cfc = arguments.cfc, cfcName = arguments.cfcName);
 			if ( !loaderExists(cfcName = loaderName) ) {
 				writeLoader(
 					cfcName = loaderName,
