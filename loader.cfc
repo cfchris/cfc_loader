@@ -10,6 +10,13 @@ component accessors=true {
 	}
 
 	/**
+	* @hint Clears loader cache (for testing)
+	**/
+	public void function clearLoaderCache() {
+		variables.loaderCache = {};
+	}
+
+	/**
 	* @hint given a string, returns a string mimicking (cffile action="write" fixnewline="yes")
 	* @see  https://www.raymondcamden.com/2014/02/10/Mimicking-fixNewLine-in-ColdFusion-Script
 	**/
@@ -25,9 +32,11 @@ component accessors=true {
 	/**
 	* @hint returns a specific loader given a cfc
 	**/
-	public component function getCfcLoader(required component cfc) {
-		var cfcName = getCfcName(cfc = arguments.cfc);
-		if ( !StructKeyExists(variables.loaderCache, cfcName) ) {
+	public component function getCfcLoader(required component cfc, string cfcName) {
+		if ( !StructKeyExists(arguments, "cfcName") || Len(arguments.cfcName) == 0 ) {
+			arguments.cfcName = getCfcName(cfc = arguments.cfc);
+		}
+		if ( !StructKeyExists(variables.loaderCache, arguments.cfcName) ) {
 			var loaderName = getCfcLoaderName(cfc = arguments.cfc);
 			if ( !loaderExists(cfcName = loaderName) ) {
 				writeLoader(
@@ -35,9 +44,9 @@ component accessors=true {
 					code = fixNewLine(getGenerator().generate(cfc = arguments.cfc))
 				);
 			}
-			variables.loaderCache[cfcName] = CreateObject("component", loaderName).init(loader = this);
+			variables.loaderCache[arguments.cfcName] = CreateObject("component", loaderName).init(loader = this);
 		}
-		return variables.loaderCache[cfcName];
+		return variables.loaderCache[arguments.cfcName];
 	}
 
 	/**

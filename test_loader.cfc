@@ -41,17 +41,48 @@ component extends="mxunit.framework.TestCase" {
 	public void function test_getCfcLoader() {
 		variables.loader.setLoadersPath("test_loaders");
 		var tests = [
-			"Bundle loader (exists: no generate)": {
+			"Bundle loader (exists: no generate) (use cfcName)": {
 				"args": {
-					"cfc": new test_cfcs.Bundle().setId(1)
+					"cfc": new test_cfcs.Bundle().setId(1),
+					"cfcName": "test_cfcs.Bundle"
 				},
 				"mocks": {
+					"getCfcName": "test_cfcs.Bundle",
 					"getCfcLoaderName": "test_loaders.test_cfcs_Bundle",
 					"loaderExists": true,
 					"generator.generate": "N/A"
 				},
 				"expect": {
 					"calls": {
+						"getCfcName": [], // arg cfcName skips getCfcName(), thus skipping GetMetaData(cfc).name
+						"getCfcLoaderName": [
+							{"cfc": SerializeJson(new test_cfcs.Bundle().setId(1))}
+						],
+						"loaderExists": [
+							{"cfcName": "test_loaders.test_cfcs_Bundle"}
+						],
+						"generator.generate": [], // exists, so no generation
+						"writeLoader": []         // exists, so no generation
+					},
+					"returnType": "test_loaders.test_cfcs_Bundle"
+				}
+			},
+			"Bundle loader (exists: no generate)": {
+				"args": {
+					"cfc": new test_cfcs.Bundle().setId(1)
+				},
+				"mocks": {
+					"getCfcName": "test_cfcs.Bundle",
+					"getCfcLoaderName": "test_loaders.test_cfcs_Bundle",
+					"loaderExists": true,
+					"generator.generate": "N/A"
+				},
+				"expect": {
+					"calls": {
+						"getCfcName": [
+							{"cfc": SerializeJson(new test_cfcs.Bundle().setId(1))},
+							{"cfc": SerializeJson(new test_cfcs.Bundle().setId(1))}
+						],
 						"getCfcLoaderName": [
 							{"cfc": SerializeJson(new test_cfcs.Bundle().setId(1))}
 						],
@@ -69,12 +100,17 @@ component extends="mxunit.framework.TestCase" {
 					"cfc": new test_cfcs.Option().setId(2)
 				},
 				"mocks": {
+					"getCfcName": "test_cfcs.Option",
 					"getCfcLoaderName": "test_loaders.test_cfcs_Option",
 					"loaderExists": false,
 					"generator.generate": "option loader code"
 				},
 				"expect": {
 					"calls": {
+						"getCfcName": [
+							{"cfc": SerializeJson(new test_cfcs.Option().setId(2))},
+							{"cfc": SerializeJson(new test_cfcs.Option().setId(2))}
+						],
 						"getCfcLoaderName": [
 							{"cfc": SerializeJson(new test_cfcs.Option().setId(2))}
 						],
@@ -92,6 +128,8 @@ component extends="mxunit.framework.TestCase" {
 				}
 			}
 		];
+		MakePublic(variables.loader, "getCfcName");
+		InjectMethod(variables.loader, this, "getCfcNameMock", "getCfcName");
 		MakePublic(variables.loader, "getCfcLoaderName");
 		InjectMethod(variables.loader, this, "getCfcLoaderNameMock", "getCfcLoaderName");
 		MakePublic(variables.loader, "loaderExists");
@@ -102,11 +140,14 @@ component extends="mxunit.framework.TestCase" {
 			var test = tests[name];
 			// reset calls and mocks
 			var calls = {
+				"getCfcName": [],
 				"getCfcLoaderName": [],
 				"loaderExists": [],
 				"generator.generate": [],
 				"writeLoader": []
 			};
+			variables.loader["getCfcName_Mock"] = test.mocks.getCfcName;
+			variables.loader["getCfcName_Args"] = [];
 			variables.loader["getCfcLoaderName_Mock"] = test.mocks.getCfcLoaderName;
 			variables.loader["getCfcLoaderName_Args"] = [];
 			variables.loader["loaderExists_Mock"] = test.mocks.loaderExists;
@@ -119,10 +160,13 @@ component extends="mxunit.framework.TestCase" {
 				return mocks["generator.generate"];
 			};
 			variables.loader.setGenerator(generatorMock);
+			// clear loader cache between tests
+			variables.loader.clearLoaderCache();
 			// call method under test (more than once to ensure caching)
-			var result = variables.loader.getCfcLoader(cfc = test.args.cfc);
-			var result = variables.loader.getCfcLoader(cfc = test.args.cfc);
+			var result = variables.loader.getCfcLoader(argumentCollection = test.args);
+			var result = variables.loader.getCfcLoader(argumentCollection = test.args);
 			// check assertions
+			calls["getCfcName"] = variables.loader["getCfcName_Args"];
 			calls["getCfcLoaderName"] = variables.loader["getCfcLoaderName_Args"];
 			calls["loaderExists"] = variables.loader["loaderExists_Args"];
 			calls["writeLoader"] = variables.loader["writeLoader_Args"];
