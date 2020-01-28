@@ -52,22 +52,26 @@ component accessors=true {
 	/**
 	* @hint returns a loader name given a cfc (specific to the CFC and its current metadata)
 	**/
-	private string function getCfcLoaderName(required component cfc) {
-		var cfcName = getCfcName(cfc = arguments.cfc);
+	private string function getCfcLoaderName(required component cfc, string cfcName) {
+		if ( StructKeyExists(arguments, "cfcName") && Len(arguments.cfcName) > 0 ) {
+			var loaderName = arguments.cfcName;
+		} else {
+			var loaderName = getCfcName(cfc = arguments.cfc);
+		}
 		// We're going to replace the dots (which represent directories in CFC names) with underscore.
 		// But, some CFCs already have an underscore in the name.
 		// And we could get a naming collision with two cfcs like the following:
 		// 	* com.foo.bar_baz > com_foo_bar_baz
 		// 	* com.foo.bar.baz > com_foo_bar_baz
 		// So, I'm going to double up underscores in names before replacing the dots.
-		cfcName = Replace(cfcName, "_", "__", "all");
+		loaderName = Replace(loaderName, "_", "__", "all");
 		// Replace dots with underscores (to keep all loaders in one directory).
-		cfcName = Replace(cfcName, ".", "_", "all");
+		loaderName = Replace(loaderName, ".", "_", "all");
 		// Prepend LoadersPath to fully qualify CFC name.
-		cfcName = getLoadersPath() & '.' & cfcName;
+		loaderName = getLoadersPath() & '.' & loaderName;
 		// Suffix cfc path with hash so that we know it's the right "version" for the CFC.
-		cfcName &= "_" & getGenerator().getSignature(cfc = arguments.cfc);
-		return cfcName;
+		loaderName &= "_" & getGenerator().getSignature(cfc = arguments.cfc);
+		return loaderName;
 	}
 
 	/**

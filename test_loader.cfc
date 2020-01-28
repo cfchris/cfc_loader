@@ -221,6 +221,25 @@ component extends="mxunit.framework.TestCase" {
 					},
 					"result": "test_loaders.foo_bar__baz_qux_signature2" // double underscore to disambiguate directory dots being replaced by _
 				}
+			},
+			"test three (use cfcName)": {
+				"args": {
+					"cfc": new test_cfcs.Option().setId(2),
+					"cfcName": "test_cfcs.Option"
+				},
+				"mocks": {
+					"getCfcName": "N/A",
+					"generator.getSignature": "signature2"
+				},
+				"expect": {
+					"calls": {
+						"getCfcName": [], // arg cfcName skips getCfcName(), thus skipping GetMetaData(cfc).name
+						"generator.getSignature": [
+							{"cfc": SerializeJson(new test_cfcs.Option().setId(2))}
+						]
+					},
+					"result": "test_loaders.test__cfcs_option_signature2" // double underscore to disambiguate directory dots being replaced by _
+				}
 			}
 		];
 		MakePublic(variables.loader, "getCfcName");
@@ -242,7 +261,7 @@ component extends="mxunit.framework.TestCase" {
 			};
 			variables.loader.setGenerator(mockGenerator);
 			// call method under test
-			var result = variables.loader.getCfcLoaderName(cfc = test.args.cfc);
+			var result = variables.loader.getCfcLoaderName(argumentCollection = test.args);
 			// check assertions
 			calls["getCfcName"] = variables.loader["getCfcName_Args"];
 			AssertEquals(test.expect.calls, calls, "#name# - calls don't match expected");
