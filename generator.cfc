@@ -176,9 +176,9 @@ component {
 				// add the base of the original CFC to "extends"
 				extends = ReReplace(arguments.cfcName, ListLast(arguments.cfcName, ".") & "$", "") & extends;
 			}
-			var extendedCFc = getRecursiveCfcCode(cfcName = extends);
+			var extendedCfc = getRecursiveCfcCode(cfcName = extends);
 		}
-		return code & extendedCFc;
+		return code & extendedCfc;
 	}
 
 	/**
