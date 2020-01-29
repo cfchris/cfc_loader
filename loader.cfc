@@ -57,6 +57,7 @@ component accessors=true {
 			var loaderName = arguments.cfcName;
 		} else {
 			var loaderName = getCfcName(cfc = arguments.cfc);
+			arguments.cfcName = loaderName;
 		}
 		// We're going to replace the dots (which represent directories in CFC names) with underscore.
 		// But, some CFCs already have an underscore in the name.
@@ -70,7 +71,7 @@ component accessors=true {
 		// Prepend LoadersPath to fully qualify CFC name.
 		loaderName = getLoadersPath() & '.' & loaderName;
 		// Suffix cfc path with hash so that we know it's the right "version" for the CFC.
-		loaderName &= "_" & getGenerator().getSignature(cfc = arguments.cfc);
+		loaderName &= "_" & getGenerator().getSignature(cfcName = arguments.cfcName);
 		return loaderName;
 	}
 

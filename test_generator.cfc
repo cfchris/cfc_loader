@@ -559,32 +559,32 @@ component extends="mxunit.framework.TestCase" {
 	* @hint "I test getSignature."
 	**/
 	public void function test_getSignature() {
-		MakePublic(variables.generator, "getProperties");
-		InjectMethod(variables.generator, this, "getPropertiesMock", "getProperties");
+		MakePublic(variables.generator, "getRecursiveCfcCode");
+		InjectMethod(variables.generator, this, "getRecursiveCfcCodeMock", "getRecursiveCfcCode");
 		// If the cfc (or any it extends) changes, we would need to generate a new loader.
 		// We would also need to generate a new loader if the generator itself changed.
 		// So, the signature of a generated loader is the hash of:
-		// 	the data container CFC's metadata
-		// 	+ the actual code of the generator
+		// 	the code of the CFC (and all it extends)
+		// 	+ the code of the generator
 		var generatorCode = FileRead(GetMetaData(variables.generator).Path);
 		var tests = [
 			{
-				"cfc": "test_cfcs.Bundle",
-				"expect": Hash(SerializeJson(["test_cfcs.Bundle"]) & generatorCode)
+				"cfcName": "test_cfcs.Bundle",
+				"expect": Hash("test_cfcs.Bundle" & generatorCode)
 			},
 			{
-				"cfc": "test_cfcs.Option",
-				"expect": Hash(SerializeJson(["test_cfcs.Option"]) & generatorCode)
+				"cfcName": "test_cfcs.Option",
+				"expect": Hash("test_cfcs.Option" & generatorCode)
 			}
 		];
 		for ( var test in tests ) {
 			// set up mocks
-			variables.generator["getProperties_Args"] = [];
-			variables.generator["getProperties_Mock"] = [test.cfc];
+			variables.generator["getRecursiveCfcCode_Args"] = [];
+			variables.generator["getRecursiveCfcCode_Mock"] = test.cfcName;
 			// call method under test
-			var result = variables.generator.getSignature(cfc = CreateObject("component", test.cfc));
+			var result = variables.generator.getSignature(cfcName = test.cfcName);
 			// check assertions
-			AssertEquals(test.expect, result, test.cfc & " signature doesn't match");
+			AssertEquals(test.expect, result, test.cfcName & " signature doesn't match");
 		}
 	}
 
@@ -658,6 +658,11 @@ component extends="mxunit.framework.TestCase" {
 	private string function getPropertyCodeMock(required struct property) {
 		ArrayAppend(this["getPropertyCode_Args"], arguments);
 		return this["getPropertyCode_Mock"];
+	}
+
+	private string function getRecursiveCfcCodeMock(required string cfcName) {
+		ArrayAppend(this["getRecursiveCfcCode_Args"], arguments);
+		return this["getRecursiveCfcCode_Mock"];
 	}
 
 	private string function getVoCacheCodeMock(required array properties) {

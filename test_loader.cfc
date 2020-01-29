@@ -205,7 +205,7 @@ component extends="mxunit.framework.TestCase" {
 							{"cfc": SerializeJson(new test_cfcs.Bundle().setId(1))}
 						],
 						"generator.getSignature": [
-							{"cfc": SerializeJson(new test_cfcs.Bundle().setId(1))}
+							{"cfcName": "foo.bar.baz"}
 						]
 					},
 					"result": "test_loaders.foo_bar_baz_signature1"
@@ -225,7 +225,7 @@ component extends="mxunit.framework.TestCase" {
 							{"cfc": SerializeJson(new test_cfcs.Option().setId(2))}
 						],
 						"generator.getSignature": [
-							{"cfc": SerializeJson(new test_cfcs.Option().setId(2))}
+							{"cfcName": "foo.bar_baz.qux"}
 						]
 					},
 					"result": "test_loaders.foo_bar__baz_qux_signature2" // double underscore to disambiguate directory dots being replaced by _
@@ -244,7 +244,7 @@ component extends="mxunit.framework.TestCase" {
 					"calls": {
 						"getCfcName": [], // arg cfcName skips getCfcName(), thus skipping GetMetaData(cfc).name
 						"generator.getSignature": [
-							{"cfc": SerializeJson(new test_cfcs.Option().setId(2))}
+							{"cfcName": "test_cfcs.Option"}
 						]
 					},
 					"result": "test_loaders.test__cfcs_option_signature2" // double underscore to disambiguate directory dots being replaced by _
@@ -263,8 +263,8 @@ component extends="mxunit.framework.TestCase" {
 			variables.loader["getCfcName_Mock"] = test.mocks.getCfcName;
 			variables.loader["getCfcName_Args"] = [];
 			var mockGenerator = new test_cfcs.Blank();
-			mockGenerator.getSignature = function(required component cfc) {
-				ArrayAppend(calls["generator.getSignature"], {"cfc": SerializeJson(arguments.cfc)});
+			mockGenerator.getSignature = function(required string cfcName) {
+				ArrayAppend(calls["generator.getSignature"], {"cfcName": arguments.cfcName});
 				var mocks = Duplicate(test.mocks);
 				return mocks["generator.getSignature"];
 			};
