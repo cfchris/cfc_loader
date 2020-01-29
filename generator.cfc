@@ -24,7 +24,10 @@ component {
 
 			private component function getCfcLoader(required string cfcName) {
 				if ( !StructKeyExists(variables.loaders, arguments.cfcName) ) {
-					variables.loaders[arguments.cfcName] = variables.parentLoader.getCfcLoader(variables.vos[arguments.cfcName]);
+					variables.loaders[arguments.cfcName] = variables.parentLoader.getCfcLoader(
+						cfc = variables.vos[arguments.cfcName],
+						cfcName = arguments.cfcName
+					);
 				}
 				return variables.loaders[arguments.cfcName];
 			}
