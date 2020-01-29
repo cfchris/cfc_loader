@@ -87,12 +87,13 @@ component accessors=true {
 	**/
 	public component function load(
 		required component cfc,
-		required any data = {}
+		required any data = {},
+		string cfcName = ""
 	) {
 		if ( !IsStruct(arguments.data) ) {
 			arguments.data = DeserializeJson(arguments.data);
 		}
-		getCfcLoader(cfc = arguments.cfc).load(
+		getCfcLoader(cfc = arguments.cfc, cfcName = arguments.cfcName).load(
 			cfc = arguments.cfc,
 			data = arguments.data
 		);

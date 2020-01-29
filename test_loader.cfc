@@ -346,12 +346,20 @@ component extends="mxunit.framework.TestCase" {
 		// make sure loader is working (also warms loader by generating and caching required sub-loaders)
 		AssertEquals(
 			DeserializeJson(SerializeJson(data)),
-			DeserializeJson(SerializeJson(variables.loader.load(new test_cfcs.Bundle(), data))),
+			DeserializeJson(SerializeJson(variables.loader.load(
+				cfcName = "test_cfcs.Bundle",
+				cfc = new test_cfcs.Bundle(),
+				data = data
+			))),
 			"start - loader failure (bundle doesn't match source data)"
 		);
 		// load a bunch of bundles nested 3 levels deep (i.e. bundle > widget[] > bundle[])
 		for ( var i = 0; i < loopCount; i++ ) {
-			var bundle = variables.loader.load(new test_cfcs.Bundle(), data);
+			var bundle = variables.loader.load(
+				cfcName = "test_cfcs.Bundle",
+				cfc = new test_cfcs.Bundle(),
+				data = data
+			);
 		}
 		// figure out how long it took
 		var elapsedTime = GetTickCount() - startTime;
@@ -447,7 +455,10 @@ component extends="mxunit.framework.TestCase" {
 					test.args.data = SerializeJson(test.args.data);
 				}
 				// call method under test
-				var result = variables.loader.load(cfc = test.args.cfc, data = test.args.data);
+				var result = variables.loader.load(
+					cfc = test.args.cfc,
+					data = test.args.data
+				);
 				// check assertions
 				AssertEquals(test.expect.returnType, GetMetaData(result).name, "(data:#dataType#) #name# - return type doesn't match expected");
 				AssertEquals(
@@ -472,6 +483,7 @@ component extends="mxunit.framework.TestCase" {
 				"expect": {
 					"calls": {
 						"getCfcLoader": [{
+							"cfcName": "",
 							"cfc": SerializeJson(new test_cfcs.Option().setId(1))
 						}],
 						"cfcLoader.load": {
@@ -490,6 +502,27 @@ component extends="mxunit.framework.TestCase" {
 				"expect": {
 					"calls": {
 						"getCfcLoader": [{
+							"cfcName": "",
+							"cfc": SerializeJson(new test_cfcs.Widget().setId(2))
+						}],
+						"cfcLoader.load": {
+							"cfc": SerializeJson(new test_cfcs.Widget().setId(2)),
+							"data": {name: "Widget 2"}
+						}
+					},
+					"returnType": "test_cfcs.Widget"
+				}
+			},
+			"test Widget (with cfcName)": {
+				"args": {
+					"cfcName": "test_cfcs.Widget",
+					"cfc": new test_cfcs.Widget().setId(2),
+					"data": {name: "Widget 2"}
+				},
+				"expect": {
+					"calls": {
+						"getCfcLoader": [{
+							"cfcName": "test_cfcs.Widget",
 							"cfc": SerializeJson(new test_cfcs.Widget().setId(2))
 						}],
 						"cfcLoader.load": {
@@ -513,7 +546,8 @@ component extends="mxunit.framework.TestCase" {
 			var loaderMock = new test_cfcs.Blank();
 			loaderMock.load = function(
 				required component cfc,
-				required struct data
+				required struct data,
+				string cfcName = ""
 			) {
 				calls["cfcLoader.load"] = {
 					"cfc": SerializeJson(arguments.cfc),
@@ -523,11 +557,11 @@ component extends="mxunit.framework.TestCase" {
 			variables.loader["getCfcLoader_Mock"] = loaderMock;
 			variables.loader["getCfcLoader_Args"] = [];
 			// call method under test
-			var result = variables.loader.load(cfc = test.args.cfc, data = test.args.data);
+			var result = variables.loader.load(argumentCollection = test.args);
 			// check assertions
 			calls["getCfcLoader"] = variables.loader["getCfcLoader_Args"];
-			AssertEquals(test.expect.calls, calls, "#name# - calls don't match expected");
-			AssertEquals(test.expect.returnType, GetMetaData(result).name, "#name# - return type doesn't match expected");
+			AssertEquals(test.expect.calls, calls, "<br>#name# - calls don't match expected");
+			AssertEquals(test.expect.returnType, GetMetaData(result).name, "<br>#name# - return type doesn't match expected");
 		}
 	}
 
@@ -598,8 +632,14 @@ component extends="mxunit.framework.TestCase" {
 
 	/* MOCKS */
 
-	private component function getCfcLoaderMock(required component cfc) {
-		ArrayAppend(this["getCfcLoader_Args"], {"cfc": SerializeJson(arguments.cfc)});
+	private component function getCfcLoaderMock(required component cfc, string cfcName) {
+		ArrayAppend(
+			this["getCfcLoader_Args"],
+			{
+				"cfc": SerializeJson(arguments.cfc),
+				"cfcName": arguments.cfcName
+			}
+		);
 		return this["getCfcLoader_Mock"];
 	}
 
