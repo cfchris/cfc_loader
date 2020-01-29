@@ -42,6 +42,28 @@ component {
 	}
 
 	/**
+	* @hint returns contents of CFC file (and every CFC in the extends tree)
+	**/
+	public string function getRecursiveCfcCode(required string cfcName) {
+		var filePath = "/" & Replace(arguments.cfcName, ".", "/", "all") & ".cfc";
+		var code = Trim(FileRead(ExpandPath(filePath)));
+		var extendsRegex = ".*[\s]+extends[\s]*=[\s]*['""]([^'""]+)['""].*";
+		var extendedCfc = "";
+		if ( RefindNoCase(extendsRegex, code) > 0 ) {
+			// cfc passed in extends another CFC.
+			// So, let's get it's contents.
+			var extends = ReReplaceNoCase(code, extendsRegex, "\1");
+			if ( ListLen(extends, ".") == 1 && ListLen(arguments.cfcName, ".") > 1 ) {
+				// special case of a CFC extending a peer (in same directory)
+				// add the base of the original CFC to "extends"
+				extends = ReReplace(arguments.cfcName, ListLast(arguments.cfcName, ".") & "$", "") & extends;
+			}
+			var extendedCFc = getRecursiveCfcCode(cfcName = extends);
+		}
+		return code & extendedCFc;
+	}
+
+	/**
 	* @hint generates code for the load()
 	**/
 	public string function getLoadMethod(required array properties) {

@@ -188,6 +188,77 @@ component extends="mxunit.framework.TestCase" {
 	}
 
 	/**
+	* @hint "I test getRecursiveCfcCode."
+	**/
+	public void function test_getRecursiveCfcCode() {
+		var tests = [
+			"no extends": {
+				args: {
+					cfcName: "test_cfcs.ExtendsBase"
+				},
+				expect: {
+					result: '
+						component accessors="true" {
+							property name="base1" type="string";
+							property name="base2" type="string";
+						}
+					'
+				}
+			},
+			"extends one level": {
+				args: {
+					cfcName: "test_cfcs.Extends1"
+				},
+				expect: {
+					result: '
+						component accessors="true" extends="ExtendsBase" {
+							property name="extends1" type="string";
+						}
+						component accessors="true" {
+							property name="base1" type="string";
+							property name="base2" type="string";
+						}
+					'
+				}
+			},
+			"extends multiple levels": {
+				args: {
+					cfcName: "test_cfcs.Extends2"
+				},
+				expect: {
+					result: '
+						component accessors="true" extends="Extends1" {
+							property name="extends2" type="string";
+						}
+						component accessors="true" extends="ExtendsBase" {
+							property name="extends1" type="string";
+						}
+						component accessors="true" {
+							property name="base1" type="string";
+							property name="base2" type="string";
+						}
+					'
+				}
+			}
+		];
+		for ( var name in tests ) {
+			var test = tests[name];
+			try {
+				var result = variables.generator.getRecursiveCfcCode(cfcName = test.args.cfcName);
+			} catch (any e) {
+				debug(e);
+				fail("#name# - unexpected error (#e.message#). run w/ debug for details.");
+			}
+			var trimWhiteSpace = "(?m)\s+";
+			AssertEquals(
+				ReReplace("<pre>" & Trim(test.expect.result), trimWhiteSpace, "", "all") & "</pre>",
+				ReReplace("<pre>" & Trim(result), trimWhiteSpace, "", "all") & "</pre>",
+				"#name# - result doesn't match expected"
+			);
+		}
+	}
+
+	/**
 	* @hint "I test getLoadMethod."
 	**/
 	public void function test_getLoadMethod() {
