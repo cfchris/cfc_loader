@@ -165,12 +165,13 @@ component {
 	public string function getRecursiveCfcCode(required string cfcName) {
 		var filePath = "/" & Replace(arguments.cfcName, ".", "/", "all") & ".cfc";
 		var code = Trim(FileRead(ExpandPath(filePath)));
-		var extendsRegex = ".*[\s]+extends[\s]*=[\s]*['""]([^'""]+)['""].*";
+		var extendsRegex = "[\s]+extends[\s]*=[\s]*['""]([^'""]+)['""]";
 		var extendedCfc = "";
 		if ( RefindNoCase(extendsRegex, code) > 0 ) {
 			// cfc passed in extends another CFC.
 			// So, let's get it's contents.
-			var extends = ReReplaceNoCase(code, extendsRegex, "\1");
+			var matches = ReFindNoCase(extendsRegex, code, 1, true, "one");
+			var extends = matches.match[2];
 			if ( ListLen(extends, ".") == 1 && ListLen(arguments.cfcName, ".") > 1 ) {
 				// special case of a CFC extending a peer (in same directory)
 				// add the base of the original CFC to "extends"
