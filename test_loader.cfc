@@ -41,19 +41,56 @@ component extends="mxunit.framework.TestCase" {
 	public void function test_getCfcLoader() {
 		variables.loader.setLoadersPath("test_loaders");
 		var tests = [
-			"Bundle loader (exists: no generate)": {
+			"Bundle loader (exists: no generate) (use cfcName)": {
 				"args": {
-					"cfc": new test_cfcs.Bundle().setId(1)
+					"cfc": new test_cfcs.Bundle().setId(1),
+					"cfcName": "test_cfcs.Bundle"
 				},
 				"mocks": {
+					"getCfcName": "test_cfcs.Bundle",
 					"getCfcLoaderName": "test_loaders.test_cfcs_Bundle",
 					"loaderExists": true,
 					"generator.generate": "N/A"
 				},
 				"expect": {
 					"calls": {
+						"getCfcName": [], // arg cfcName skips getCfcName(), thus skipping GetMetaData(cfc).name
 						"getCfcLoaderName": [
+							{
+								"cfc": SerializeJson(new test_cfcs.Bundle().setId(1)),
+								"cfcName": "test_cfcs.Bundle"
+							}
+						],
+						"loaderExists": [
+							{"cfcName": "test_loaders.test_cfcs_Bundle"}
+						],
+						"generator.generate": [], // exists, so no generation
+						"writeLoader": []         // exists, so no generation
+					},
+					"returnType": "test_loaders.test_cfcs_Bundle"
+				}
+			},
+			"Bundle loader (exists: no generate)": {
+				"args": {
+					"cfc": new test_cfcs.Bundle().setId(1)
+				},
+				"mocks": {
+					"getCfcName": "test_cfcs.Bundle",
+					"getCfcLoaderName": "test_loaders.test_cfcs_Bundle",
+					"loaderExists": true,
+					"generator.generate": "N/A"
+				},
+				"expect": {
+					"calls": {
+						"getCfcName": [
+							{"cfc": SerializeJson(new test_cfcs.Bundle().setId(1))},
 							{"cfc": SerializeJson(new test_cfcs.Bundle().setId(1))}
+						],
+						"getCfcLoaderName": [
+							{
+								"cfc": SerializeJson(new test_cfcs.Bundle().setId(1)),
+								"cfcName": "test_cfcs.Bundle"
+							}
 						],
 						"loaderExists": [
 							{"cfcName": "test_loaders.test_cfcs_Bundle"}
@@ -69,14 +106,22 @@ component extends="mxunit.framework.TestCase" {
 					"cfc": new test_cfcs.Option().setId(2)
 				},
 				"mocks": {
+					"getCfcName": "test_cfcs.Option",
 					"getCfcLoaderName": "test_loaders.test_cfcs_Option",
 					"loaderExists": false,
 					"generator.generate": "option loader code"
 				},
 				"expect": {
 					"calls": {
-						"getCfcLoaderName": [
+						"getCfcName": [
+							{"cfc": SerializeJson(new test_cfcs.Option().setId(2))},
 							{"cfc": SerializeJson(new test_cfcs.Option().setId(2))}
+						],
+						"getCfcLoaderName": [
+							{
+								"cfc": SerializeJson(new test_cfcs.Option().setId(2)),
+								"cfcName": "test_cfcs.Option"
+							}
 						],
 						"loaderExists": [
 							{"cfcName": "test_loaders.test_cfcs_Option"}
@@ -92,6 +137,8 @@ component extends="mxunit.framework.TestCase" {
 				}
 			}
 		];
+		MakePublic(variables.loader, "getCfcName");
+		InjectMethod(variables.loader, this, "getCfcNameMock", "getCfcName");
 		MakePublic(variables.loader, "getCfcLoaderName");
 		InjectMethod(variables.loader, this, "getCfcLoaderNameMock", "getCfcLoaderName");
 		MakePublic(variables.loader, "loaderExists");
@@ -102,11 +149,14 @@ component extends="mxunit.framework.TestCase" {
 			var test = tests[name];
 			// reset calls and mocks
 			var calls = {
+				"getCfcName": [],
 				"getCfcLoaderName": [],
 				"loaderExists": [],
 				"generator.generate": [],
 				"writeLoader": []
 			};
+			variables.loader["getCfcName_Mock"] = test.mocks.getCfcName;
+			variables.loader["getCfcName_Args"] = [];
 			variables.loader["getCfcLoaderName_Mock"] = test.mocks.getCfcLoaderName;
 			variables.loader["getCfcLoaderName_Args"] = [];
 			variables.loader["loaderExists_Mock"] = test.mocks.loaderExists;
@@ -119,10 +169,13 @@ component extends="mxunit.framework.TestCase" {
 				return mocks["generator.generate"];
 			};
 			variables.loader.setGenerator(generatorMock);
+			// clear loader cache between tests
+			variables.loader.clearLoaderCache();
 			// call method under test (more than once to ensure caching)
-			var result = variables.loader.getCfcLoader(cfc = test.args.cfc);
-			var result = variables.loader.getCfcLoader(cfc = test.args.cfc);
+			var result = variables.loader.getCfcLoader(argumentCollection = test.args);
+			var result = variables.loader.getCfcLoader(argumentCollection = test.args);
 			// check assertions
+			calls["getCfcName"] = variables.loader["getCfcName_Args"];
 			calls["getCfcLoaderName"] = variables.loader["getCfcLoaderName_Args"];
 			calls["loaderExists"] = variables.loader["loaderExists_Args"];
 			calls["writeLoader"] = variables.loader["writeLoader_Args"];
@@ -152,7 +205,7 @@ component extends="mxunit.framework.TestCase" {
 							{"cfc": SerializeJson(new test_cfcs.Bundle().setId(1))}
 						],
 						"generator.getSignature": [
-							{"cfc": SerializeJson(new test_cfcs.Bundle().setId(1))}
+							{"cfcName": "foo.bar.baz"}
 						]
 					},
 					"result": "test_loaders.foo_bar_baz_signature1"
@@ -172,10 +225,29 @@ component extends="mxunit.framework.TestCase" {
 							{"cfc": SerializeJson(new test_cfcs.Option().setId(2))}
 						],
 						"generator.getSignature": [
-							{"cfc": SerializeJson(new test_cfcs.Option().setId(2))}
+							{"cfcName": "foo.bar_baz.qux"}
 						]
 					},
 					"result": "test_loaders.foo_bar__baz_qux_signature2" // double underscore to disambiguate directory dots being replaced by _
+				}
+			},
+			"test three (use cfcName)": {
+				"args": {
+					"cfc": new test_cfcs.Option().setId(2),
+					"cfcName": "test_cfcs.Option"
+				},
+				"mocks": {
+					"getCfcName": "N/A",
+					"generator.getSignature": "signature2"
+				},
+				"expect": {
+					"calls": {
+						"getCfcName": [], // arg cfcName skips getCfcName(), thus skipping GetMetaData(cfc).name
+						"generator.getSignature": [
+							{"cfcName": "test_cfcs.Option"}
+						]
+					},
+					"result": "test_loaders.test__cfcs_option_signature2" // double underscore to disambiguate directory dots being replaced by _
 				}
 			}
 		];
@@ -191,14 +263,14 @@ component extends="mxunit.framework.TestCase" {
 			variables.loader["getCfcName_Mock"] = test.mocks.getCfcName;
 			variables.loader["getCfcName_Args"] = [];
 			var mockGenerator = new test_cfcs.Blank();
-			mockGenerator.getSignature = function(required component cfc) {
-				ArrayAppend(calls["generator.getSignature"], {"cfc": SerializeJson(arguments.cfc)});
+			mockGenerator.getSignature = function(required string cfcName) {
+				ArrayAppend(calls["generator.getSignature"], {"cfcName": arguments.cfcName});
 				var mocks = Duplicate(test.mocks);
 				return mocks["generator.getSignature"];
 			};
 			variables.loader.setGenerator(mockGenerator);
 			// call method under test
-			var result = variables.loader.getCfcLoaderName(cfc = test.args.cfc);
+			var result = variables.loader.getCfcLoaderName(argumentCollection = test.args);
 			// check assertions
 			calls["getCfcName"] = variables.loader["getCfcName_Args"];
 			AssertEquals(test.expect.calls, calls, "#name# - calls don't match expected");
@@ -274,12 +346,20 @@ component extends="mxunit.framework.TestCase" {
 		// make sure loader is working (also warms loader by generating and caching required sub-loaders)
 		AssertEquals(
 			DeserializeJson(SerializeJson(data)),
-			DeserializeJson(SerializeJson(variables.loader.load(new test_cfcs.Bundle(), data))),
+			DeserializeJson(SerializeJson(variables.loader.load(
+				cfcName = "test_cfcs.Bundle",
+				cfc = new test_cfcs.Bundle(),
+				data = data
+			))),
 			"start - loader failure (bundle doesn't match source data)"
 		);
 		// load a bunch of bundles nested 3 levels deep (i.e. bundle > widget[] > bundle[])
 		for ( var i = 0; i < loopCount; i++ ) {
-			var bundle = variables.loader.load(new test_cfcs.Bundle(), data);
+			var bundle = variables.loader.load(
+				cfcName = "test_cfcs.Bundle",
+				cfc = new test_cfcs.Bundle(),
+				data = data
+			);
 		}
 		// figure out how long it took
 		var elapsedTime = GetTickCount() - startTime;
@@ -375,7 +455,10 @@ component extends="mxunit.framework.TestCase" {
 					test.args.data = SerializeJson(test.args.data);
 				}
 				// call method under test
-				var result = variables.loader.load(cfc = test.args.cfc, data = test.args.data);
+				var result = variables.loader.load(
+					cfc = test.args.cfc,
+					data = test.args.data
+				);
 				// check assertions
 				AssertEquals(test.expect.returnType, GetMetaData(result).name, "(data:#dataType#) #name# - return type doesn't match expected");
 				AssertEquals(
@@ -400,6 +483,7 @@ component extends="mxunit.framework.TestCase" {
 				"expect": {
 					"calls": {
 						"getCfcLoader": [{
+							"cfcName": "",
 							"cfc": SerializeJson(new test_cfcs.Option().setId(1))
 						}],
 						"cfcLoader.load": {
@@ -418,6 +502,27 @@ component extends="mxunit.framework.TestCase" {
 				"expect": {
 					"calls": {
 						"getCfcLoader": [{
+							"cfcName": "",
+							"cfc": SerializeJson(new test_cfcs.Widget().setId(2))
+						}],
+						"cfcLoader.load": {
+							"cfc": SerializeJson(new test_cfcs.Widget().setId(2)),
+							"data": {name: "Widget 2"}
+						}
+					},
+					"returnType": "test_cfcs.Widget"
+				}
+			},
+			"test Widget (with cfcName)": {
+				"args": {
+					"cfcName": "test_cfcs.Widget",
+					"cfc": new test_cfcs.Widget().setId(2),
+					"data": {name: "Widget 2"}
+				},
+				"expect": {
+					"calls": {
+						"getCfcLoader": [{
+							"cfcName": "test_cfcs.Widget",
 							"cfc": SerializeJson(new test_cfcs.Widget().setId(2))
 						}],
 						"cfcLoader.load": {
@@ -441,7 +546,8 @@ component extends="mxunit.framework.TestCase" {
 			var loaderMock = new test_cfcs.Blank();
 			loaderMock.load = function(
 				required component cfc,
-				required struct data
+				required struct data,
+				string cfcName = ""
 			) {
 				calls["cfcLoader.load"] = {
 					"cfc": SerializeJson(arguments.cfc),
@@ -451,11 +557,11 @@ component extends="mxunit.framework.TestCase" {
 			variables.loader["getCfcLoader_Mock"] = loaderMock;
 			variables.loader["getCfcLoader_Args"] = [];
 			// call method under test
-			var result = variables.loader.load(cfc = test.args.cfc, data = test.args.data);
+			var result = variables.loader.load(argumentCollection = test.args);
 			// check assertions
 			calls["getCfcLoader"] = variables.loader["getCfcLoader_Args"];
-			AssertEquals(test.expect.calls, calls, "#name# - calls don't match expected");
-			AssertEquals(test.expect.returnType, GetMetaData(result).name, "#name# - return type doesn't match expected");
+			AssertEquals(test.expect.calls, calls, "<br>#name# - calls don't match expected");
+			AssertEquals(test.expect.returnType, GetMetaData(result).name, "<br>#name# - return type doesn't match expected");
 		}
 	}
 
@@ -526,13 +632,24 @@ component extends="mxunit.framework.TestCase" {
 
 	/* MOCKS */
 
-	private component function getCfcLoaderMock(required component cfc) {
-		ArrayAppend(this["getCfcLoader_Args"], {"cfc": SerializeJson(arguments.cfc)});
+	private component function getCfcLoaderMock(required component cfc, string cfcName) {
+		ArrayAppend(
+			this["getCfcLoader_Args"],
+			{
+				"cfc": SerializeJson(arguments.cfc),
+				"cfcName": arguments.cfcName
+			}
+		);
 		return this["getCfcLoader_Mock"];
 	}
 
-	private string function getCfcLoaderNameMock(required component cfc) {
-		ArrayAppend(this["getCfcLoaderName_Args"], {"cfc": SerializeJson(arguments.cfc)});
+	private string function getCfcLoaderNameMock(required component cfc, string cfcName) {
+		var args = {};
+		if ( StructKeyExists(arguments, "cfcName") && Len(arguments.cfcName) > 0 ) {
+			args["cfcName"] = arguments.cfcName;
+		}
+		args.cfc = SerializeJson(arguments.cfc);
+		ArrayAppend(this["getCfcLoaderName_Args"], args);
 		return this["getCfcLoaderName_Mock"];
 	}
 

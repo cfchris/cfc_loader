@@ -69,7 +69,10 @@ component extends="mxunit.framework.TestCase" {
 
 							private component function getCfcLoader(required string cfcName) {
 								if ( !StructKeyExists(variables.loaders, arguments.cfcName) ) {
-									variables.loaders[arguments.cfcName] = variables.parentLoader.getCfcLoader(variables.vos[arguments.cfcName]);
+									variables.loaders[arguments.cfcName] = variables.parentLoader.getCfcLoader(
+										cfc = variables.vos[arguments.cfcName],
+										cfcName = arguments.cfcName
+									);
 								}
 								return variables.loaders[arguments.cfcName];
 							}
@@ -133,7 +136,10 @@ component extends="mxunit.framework.TestCase" {
 
 							private component function getCfcLoader(required string cfcName) {
 								if ( !StructKeyExists(variables.loaders, arguments.cfcName) ) {
-									variables.loaders[arguments.cfcName] = variables.parentLoader.getCfcLoader(variables.vos[arguments.cfcName]);
+									variables.loaders[arguments.cfcName] = variables.parentLoader.getCfcLoader(
+										cfc = variables.vos[arguments.cfcName],
+										cfcName = arguments.cfcName
+									);
 								}
 								return variables.loaders[arguments.cfcName];
 							}
@@ -176,6 +182,77 @@ component extends="mxunit.framework.TestCase" {
 			AssertEquals(
 				ReReplace(Trim(test.expect.result), trimIndentRegex, "", "all"),
 				ReReplace(Trim(result), trimIndentRegex, "", "all"),
+				"#name# - result doesn't match expected"
+			);
+		}
+	}
+
+	/**
+	* @hint "I test getRecursiveCfcCode."
+	**/
+	public void function test_getRecursiveCfcCode() {
+		var tests = [
+			"no extends": {
+				args: {
+					cfcName: "test_cfcs.ExtendsBase"
+				},
+				expect: {
+					result: '
+						component accessors="true" {
+							property name="base1" type="string";
+							property name="base2" type="string";
+						}
+					'
+				}
+			},
+			"extends one level": {
+				args: {
+					cfcName: "test_cfcs.Extends1"
+				},
+				expect: {
+					result: '
+						component accessors="true" extends="ExtendsBase" {
+							property name="extends1" type="string";
+						}
+						component accessors="true" {
+							property name="base1" type="string";
+							property name="base2" type="string";
+						}
+					'
+				}
+			},
+			"extends multiple levels": {
+				args: {
+					cfcName: "test_cfcs.Extends2"
+				},
+				expect: {
+					result: '
+						component accessors="true" extends="Extends1" {
+							property name="extends2" type="string";
+						}
+						component accessors="true" extends="ExtendsBase" {
+							property name="extends1" type="string";
+						}
+						component accessors="true" {
+							property name="base1" type="string";
+							property name="base2" type="string";
+						}
+					'
+				}
+			}
+		];
+		for ( var name in tests ) {
+			var test = tests[name];
+			try {
+				var result = variables.generator.getRecursiveCfcCode(cfcName = test.args.cfcName);
+			} catch (any e) {
+				debug(e);
+				fail("#name# - unexpected error (#e.message#). run w/ debug for details.");
+			}
+			var trimWhiteSpace = "(?m)\s+";
+			AssertEquals(
+				ReReplace("<pre>" & Trim(test.expect.result), trimWhiteSpace, "", "all") & "</pre>",
+				ReReplace("<pre>" & Trim(result), trimWhiteSpace, "", "all") & "</pre>",
 				"#name# - result doesn't match expected"
 			);
 		}
@@ -482,32 +559,32 @@ component extends="mxunit.framework.TestCase" {
 	* @hint "I test getSignature."
 	**/
 	public void function test_getSignature() {
-		MakePublic(variables.generator, "getProperties");
-		InjectMethod(variables.generator, this, "getPropertiesMock", "getProperties");
+		MakePublic(variables.generator, "getRecursiveCfcCode");
+		InjectMethod(variables.generator, this, "getRecursiveCfcCodeMock", "getRecursiveCfcCode");
 		// If the cfc (or any it extends) changes, we would need to generate a new loader.
 		// We would also need to generate a new loader if the generator itself changed.
 		// So, the signature of a generated loader is the hash of:
-		// 	the data container CFC's metadata
-		// 	+ the actual code of the generator
+		// 	the code of the CFC (and all it extends)
+		// 	+ the code of the generator
 		var generatorCode = FileRead(GetMetaData(variables.generator).Path);
 		var tests = [
 			{
-				"cfc": "test_cfcs.Bundle",
-				"expect": Hash(SerializeJson(["test_cfcs.Bundle"]) & generatorCode)
+				"cfcName": "test_cfcs.Bundle",
+				"expect": Hash("test_cfcs.Bundle" & generatorCode)
 			},
 			{
-				"cfc": "test_cfcs.Option",
-				"expect": Hash(SerializeJson(["test_cfcs.Option"]) & generatorCode)
+				"cfcName": "test_cfcs.Option",
+				"expect": Hash("test_cfcs.Option" & generatorCode)
 			}
 		];
 		for ( var test in tests ) {
 			// set up mocks
-			variables.generator["getProperties_Args"] = [];
-			variables.generator["getProperties_Mock"] = [test.cfc];
+			variables.generator["getRecursiveCfcCode_Args"] = [];
+			variables.generator["getRecursiveCfcCode_Mock"] = test.cfcName;
 			// call method under test
-			var result = variables.generator.getSignature(cfc = CreateObject("component", test.cfc));
+			var result = variables.generator.getSignature(cfcName = test.cfcName);
 			// check assertions
-			AssertEquals(test.expect, result, test.cfc & " signature doesn't match");
+			AssertEquals(test.expect, result, test.cfcName & " signature doesn't match");
 		}
 	}
 
@@ -581,6 +658,11 @@ component extends="mxunit.framework.TestCase" {
 	private string function getPropertyCodeMock(required struct property) {
 		ArrayAppend(this["getPropertyCode_Args"], arguments);
 		return this["getPropertyCode_Mock"];
+	}
+
+	private string function getRecursiveCfcCodeMock(required string cfcName) {
+		ArrayAppend(this["getRecursiveCfcCode_Args"], arguments);
+		return this["getRecursiveCfcCode_Mock"];
 	}
 
 	private string function getVoCacheCodeMock(required array properties) {

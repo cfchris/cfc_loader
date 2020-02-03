@@ -24,7 +24,10 @@ component {
 
 			private component function getCfcLoader(required string cfcName) {
 				if ( !StructKeyExists(variables.loaders, arguments.cfcName) ) {
-					variables.loaders[arguments.cfcName] = variables.parentLoader.getCfcLoader(variables.vos[arguments.cfcName]);
+					variables.loaders[arguments.cfcName] = variables.parentLoader.getCfcLoader(
+						cfc = variables.vos[arguments.cfcName],
+						cfcName = arguments.cfcName
+					);
 				}
 				return variables.loaders[arguments.cfcName];
 			}
@@ -157,12 +160,35 @@ component {
 	}
 
 	/**
+	* @hint returns contents of CFC file (and every CFC in the extends tree)
+	**/
+	public string function getRecursiveCfcCode(required string cfcName) {
+		var filePath = "/" & Replace(arguments.cfcName, ".", "/", "all") & ".cfc";
+		var code = Trim(FileRead(ExpandPath(filePath)));
+		var extendsRegex = "[\s]+extends[\s]*=[\s]*['""]([^'""]+)['""]";
+		var extendedCfc = "";
+		if ( RefindNoCase(extendsRegex, code) > 0 ) {
+			// cfc passed in extends another CFC.
+			// So, let's get it's contents.
+			var matches = ReFindNoCase(extendsRegex, code, 1, true, "one");
+			var extends = matches.match[2];
+			if ( ListLen(extends, ".") == 1 && ListLen(arguments.cfcName, ".") > 1 ) {
+				// special case of a CFC extending a peer (in same directory)
+				// add the base of the original CFC to "extends"
+				extends = ReReplace(arguments.cfcName, ListLast(arguments.cfcName, ".") & "$", "") & extends;
+			}
+			var extendedCfc = getRecursiveCfcCode(cfcName = extends);
+		}
+		return code & extendedCfc;
+	}
+
+	/**
 	* @hint given a cfc, returns a hash used to make sure the generated loader is in sync with the CFC it's going to load
 	**/
-	public string function getSignature(required component cfc) {
+	public string function getSignature(required string cfcName) {
 		// The goal of any given loader is to set properties on a given CFC.
 		// If any of the properties on a CFC (or any it extends) change, that's a new signature.
-		var identity = SerializeJson(getProperties(cfc = arguments.cfc));
+		var identity = getRecursiveCfcCode(cfcName = arguments.cfcName);
 		// If the generator itself changes, we also need to generate a new loader.
 		var generatorCode = FileRead(GetMetaData(this).path);
 		return Hash(identity & generatorCode);

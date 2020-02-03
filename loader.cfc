@@ -10,6 +10,13 @@ component accessors=true {
 	}
 
 	/**
+	* @hint Clears loader cache (for testing)
+	**/
+	public void function clearLoaderCache() {
+		variables.loaderCache = {};
+	}
+
+	/**
 	* @hint given a string, returns a string mimicking (cffile action="write" fixnewline="yes")
 	* @see  https://www.raymondcamden.com/2014/02/10/Mimicking-fixNewLine-in-ColdFusion-Script
 	**/
@@ -25,40 +32,47 @@ component accessors=true {
 	/**
 	* @hint returns a specific loader given a cfc
 	**/
-	public component function getCfcLoader(required component cfc) {
-		var cfcName = getCfcName(cfc = arguments.cfc);
-		if ( !StructKeyExists(variables.loaderCache, cfcName) ) {
-			var loaderName = getCfcLoaderName(cfc = arguments.cfc);
+	public component function getCfcLoader(required component cfc, string cfcName) {
+		if ( !StructKeyExists(arguments, "cfcName") || Len(arguments.cfcName) == 0 ) {
+			arguments.cfcName = getCfcName(cfc = arguments.cfc);
+		}
+		if ( !StructKeyExists(variables.loaderCache, arguments.cfcName) ) {
+			var loaderName = getCfcLoaderName(cfc = arguments.cfc, cfcName = arguments.cfcName);
 			if ( !loaderExists(cfcName = loaderName) ) {
 				writeLoader(
 					cfcName = loaderName,
 					code = fixNewLine(getGenerator().generate(cfc = arguments.cfc))
 				);
 			}
-			variables.loaderCache[cfcName] = CreateObject("component", loaderName).init(loader = this);
+			variables.loaderCache[arguments.cfcName] = CreateObject("component", loaderName).init(loader = this);
 		}
-		return variables.loaderCache[cfcName];
+		return variables.loaderCache[arguments.cfcName];
 	}
 
 	/**
 	* @hint returns a loader name given a cfc (specific to the CFC and its current metadata)
 	**/
-	private string function getCfcLoaderName(required component cfc) {
-		var cfcName = getCfcName(cfc = arguments.cfc);
+	private string function getCfcLoaderName(required component cfc, string cfcName) {
+		if ( StructKeyExists(arguments, "cfcName") && Len(arguments.cfcName) > 0 ) {
+			var loaderName = arguments.cfcName;
+		} else {
+			var loaderName = getCfcName(cfc = arguments.cfc);
+			arguments.cfcName = loaderName;
+		}
 		// We're going to replace the dots (which represent directories in CFC names) with underscore.
 		// But, some CFCs already have an underscore in the name.
 		// And we could get a naming collision with two cfcs like the following:
 		// 	* com.foo.bar_baz > com_foo_bar_baz
 		// 	* com.foo.bar.baz > com_foo_bar_baz
 		// So, I'm going to double up underscores in names before replacing the dots.
-		cfcName = Replace(cfcName, "_", "__", "all");
+		loaderName = Replace(loaderName, "_", "__", "all");
 		// Replace dots with underscores (to keep all loaders in one directory).
-		cfcName = Replace(cfcName, ".", "_", "all");
+		loaderName = Replace(loaderName, ".", "_", "all");
 		// Prepend LoadersPath to fully qualify CFC name.
-		cfcName = getLoadersPath() & '.' & cfcName;
+		loaderName = getLoadersPath() & '.' & loaderName;
 		// Suffix cfc path with hash so that we know it's the right "version" for the CFC.
-		cfcName &= "_" & getGenerator().getSignature(cfc = arguments.cfc);
-		return cfcName;
+		loaderName &= "_" & getGenerator().getSignature(cfcName = arguments.cfcName);
+		return loaderName;
 	}
 
 	/**
@@ -73,12 +87,13 @@ component accessors=true {
 	**/
 	public component function load(
 		required component cfc,
-		required any data = {}
+		required any data = {},
+		string cfcName = ""
 	) {
 		if ( !IsStruct(arguments.data) ) {
 			arguments.data = DeserializeJson(arguments.data);
 		}
-		getCfcLoader(cfc = arguments.cfc).load(
+		getCfcLoader(cfc = arguments.cfc, cfcName = arguments.cfcName).load(
 			cfc = arguments.cfc,
 			data = arguments.data
 		);
