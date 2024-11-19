@@ -191,7 +191,7 @@ component {
 		var identity = getRecursiveCfcCode(cfcName = arguments.cfcName);
 		// If the generator itself changes, we also need to generate a new loader.
 		var generatorCode = FileRead(GetMetaData(this).path);
-		return Hash(identity & generatorCode);
+		return Hash(identity & generatorCode, "MD5");
 	}
 
 	/**

@@ -570,11 +570,11 @@ component extends="mxunit.framework.TestCase" {
 		var tests = [
 			{
 				"cfcName": "test_cfcs.Bundle",
-				"expect": Hash("test_cfcs.Bundle" & generatorCode)
+				"expect": Hash("test_cfcs.Bundle" & generatorCode, "MD5")
 			},
 			{
 				"cfcName": "test_cfcs.Option",
-				"expect": Hash("test_cfcs.Option" & generatorCode)
+				"expect": Hash("test_cfcs.Option" & generatorCode, "MD5")
 			}
 		];
 		for ( var test in tests ) {
