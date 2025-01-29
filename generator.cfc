@@ -67,14 +67,18 @@ component {
 	* @hint given a component, returns array of properties
 	**/
 	public array function getProperties(required component cfc) {
-		var properties = [];
 		var metaData = GetMetaData(arguments.cfc);
+		var properties = [];
+		var propertyMap = {};
 		while ( StructKeyExists(metaData, "extends") ) {
 			if ( !StructKeyExists(metaData, "Properties") ) {
 				metaData = metaData.extends;
 				continue;
 			}
 			for ( var p in metaData.Properties ) {
+				if ( StructKeyExists(propertyMap, p.name) ) {
+					continue;
+				}
 				var property = {
 					"name": p.name,
 					"type": p.type,
@@ -87,6 +91,7 @@ component {
 					property.type = "component";
 					property.item_type = p.type;
 				}
+				propertyMap[p.name] = true;
 				ArrayAppend(properties, property);
 			}
 			metaData = metaData.extends;

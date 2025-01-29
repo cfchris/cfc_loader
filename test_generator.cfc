@@ -376,14 +376,14 @@ component extends="mxunit.framework.TestCase" {
 			},
 			"*extended* properties test": {
 				"args": {
-					"cfc": new test_cfcs.Extends2()
+					"cfc": new test_cfcs.ExtendsAndOverrides()
 				},
 				"expect": {
 					"result": [
-						{"name": "base1",    "type": "string", "item_type": ""},
-						{"name": "base2",    "type": "string", "item_type": ""},
-						{"name": "extends1", "type": "string", "item_type": ""},
-						{"name": "extends2", "type": "string", "item_type": ""}
+						{"name": "base1",    "type": "string",  "item_type": ""},
+						{"name": "base2",    "type": "numeric", "item_type": ""},
+						{"name": "extends1", "type": "string",  "item_type": ""},
+						{"name": "extends2", "type": "string",  "item_type": ""}
 					]
 				}
 			}
